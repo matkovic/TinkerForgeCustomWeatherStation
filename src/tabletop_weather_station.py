@@ -145,7 +145,7 @@ class WeatherStation:
 
         now = time.time()
         if now - self.last_pm_concentration_time >= TIME_SECONDS[self.logging_period_index]:
-            #self.vdb.add_data_sensor(pm10,pm25,pm100)
+            self.vdb.add_data_pm_concentration(pm10,pm25,pm100)
             self.last_pm_concentration_time = now
         
 
@@ -205,7 +205,10 @@ class WeatherStation:
                     self.lcd.register_callback(self.lcd.CALLBACK_TOUCH_GESTURE, self.cb_touch_gesture)
                     self.lcd.register_callback(self.lcd.CALLBACK_GUI_TAB_SELECTED, self.cb_gui_tab_selected)
                     self.lcd.register_callback(self.lcd.CALLBACK_GUI_SLIDER_VALUE, self.cb_gui_slider_value)
-
+                    self.lcd.set_touch_gesture_callback_configuration(10, True)
+                    self.lcd.set_gui_tab_selected_callback_configuration(100, True)
+                    self.lcd.set_gui_slider_value_callback_configuration(100, True)
+                    
                     screen_set_lcd(self.lcd)
 
                     log.info('LCD 128x64 initialized')

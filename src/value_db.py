@@ -269,6 +269,68 @@ class ValueDB:
 
         self.db.commit()
 
+
+    def add_data_pm_concentration(self, pm10, pm25, pm100):
+        if threading.current_thread() != self.thread:
+            self.func_queue.put((self.add_data_pm_concentration, (pm10, pm25, pm100)))
+            return
+
+        self.dbc.execute("""
+            INSERT INTO pm_concentration (pm10, pm25, pm100)
+            VALUES (?, ?, ?)""",
+            (pm10, pm25, pm100)
+        )
+
+        self.dbc.execute("""
+            UPDATE pm_concentration_minute
+            SET pm10          = pm10 + ?,
+                pm25 = pm25 + ?,
+                pm100        = pm100 + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 60))""",
+            (pm10, pm25, pm100)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO pm_concentration_minute (pm10, pm25, pm100)
+            VALUES (?, ?, ?)""",
+            (pm10, pm25, pm100)
+        )
+
+        self.dbc.execute("""
+            UPDATE pm_concentration_hour
+            SET pm10          = pm10 + ?,
+                pm25 = pm25 + ?,
+                pm100        = pm100 + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 3600))""",
+            (pm10, pm25, pm100)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO pm_concentration_hour (pm10, pm25, pm100)
+            VALUES (?, ?, ?)""",
+            (pm10, pm25, pm100)
+        )
+
+        self.dbc.execute("""
+            UPDATE pm_concentration_day
+            SET pm10          = pm10 + ?,
+                pm25 = pm25 + ?,
+                pm100        = pm100 + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 86400))""",
+            (pm10, pm25, pm100)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO pm_concentration_day (pm10, pm25, pm100)
+            VALUES (?, ?, ?)""",
+            (pm10, pm25, pm100)
+        )
+
+        self.db.commit()
+
     def add_data_station(self, identifier, temperature, humidity, wind_speed, gust_speed, rain, wind_direction, battery_low):
         if threading.current_thread() != self.thread:
             self.func_queue.put((self.add_data_station, (identifier, temperature, humidity, wind_speed, gust_speed, rain, wind_direction, battery_low)))
@@ -442,6 +504,50 @@ class ValueDB:
                 temperature integer,
                 humidity integer,
                 air_pressure integer,
+                count integer default 1
+            )"""
+        )
+
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS pm_concentration (
+                id integer primary key,
+                time timestamp default (strftime('%s', 'now')),
+                pm10 integer,
+                pm25 integer,
+                pm100 integer
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS pm_concentration_minute (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%60)),
+                pm10 integer,
+                pm25 integer,
+                pm100 integer,
+                count integer default 1
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS pm_concentration_hour (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%3600)),
+                pm10 integer,
+                pm25 integer,
+                pm100 integer,
+                count integer default 1
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS pm_concentration_day (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%86400)),
+                pm10 integer,
+                pm25 integer,
+                pm100 integer,
                 count integer default 1
             )"""
         )
