@@ -402,7 +402,18 @@ class ValueDB:
 
         self.db.commit()
 
+    def add_data_co2(self, co2_concentration, temperature, humidity):
+        if threading.current_thread() != self.thread:
+            self.func_queue.put((self.add_data_co2, (co2_concentration, temperature, humidity)))
+            return
 
+        self.dbc.execute("""
+            INSERT INTO co2 (co2_concentration, temperature, humidity)
+            VALUES (?, ?, ?)""",
+            (co2_concentration, temperature, humidity)
+        )
+
+        self.db.commit()
 
     def add_data_station(self, identifier, temperature, humidity, wind_speed, gust_speed, rain, wind_direction, battery_low):
         if threading.current_thread() != self.thread:
@@ -680,6 +691,21 @@ class ValueDB:
                 count integer default 1
             )"""
         )
+
+
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS co2 (
+                id integer primary key,
+                time timestamp default (strftime('%s', 'now')),
+                co2_concentration integer,
+                temperature integer,
+                humidity integer
+            )"""
+        )
+
+
+
 
 
 

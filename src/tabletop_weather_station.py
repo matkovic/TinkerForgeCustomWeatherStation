@@ -163,7 +163,6 @@ class WeatherStation:
     def cb_pm_count(self, greater03um, greater05um, greater10um, greater25um, greater50um, greater100um):
         self.pm_count_last_value = (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
 
-        print(self.pm_count_last_value)
         now = time.time()
         if now - self.last_pm_count_time >= TIME_SECONDS[self.logging_period_index]:
             self.vdb.add_data_pm_count(greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
@@ -182,10 +181,10 @@ class WeatherStation:
 
     def cb_co2_values(self, co2_concentration, temperature, humidity):
         self.co2_last_value = GAV_CO2(co2_concentration, temperature, humidity)
-
+        
         now = time.time()
         if now - self.last_co2_time >= TIME_SECONDS[self.logging_period_index]:
-            self.vdb.add_data_sensor(co2_concentration, temperature, humidity)
+            self.vdb.add_data_co2(co2_concentration, temperature, humidity)
             self.last_co2_time = now
 
 
