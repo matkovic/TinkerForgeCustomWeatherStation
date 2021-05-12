@@ -1,0 +1,4 @@
+venv/
+.vscode/
+src/tinkerforge/.tabletop_weather_station_demo.db
+src/tinkerforge/.weather_station.db
