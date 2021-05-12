@@ -55,8 +55,8 @@ class WeatherStation:
         self.last_pm_count_time = 0
 
         self.pm_last_time_enable = 0
-        self.pm_enable_seconds = 10
-        self.pm_enable_pause_seconds = 20
+        self.pm_enable_seconds = 30
+        self.pm_enable_pause_seconds = 30
 
         # We use this lock to make sure that there is never an update at the
         # same time as a gesture or GUI callback. Otherwise we might draw two
@@ -163,9 +163,10 @@ class WeatherStation:
     def cb_pm_count(self, greater03um, greater05um, greater10um, greater25um, greater50um, greater100um):
         self.pm_count_last_value = (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
 
+        print(self.pm_count_last_value)
         now = time.time()
         if now - self.last_pm_count_time >= TIME_SECONDS[self.logging_period_index]:
-            #self.vdb.add_data_sensor(greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+            self.vdb.add_data_pm_count(greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
             self.last_pm_count_time = now
 
         # turn of and turn on again for specific time, to increase lifetime of the sensor

@@ -331,6 +331,79 @@ class ValueDB:
 
         self.db.commit()
 
+
+    def add_data_pm_count(self, greater03um, greater05um, greater10um, greater25um, greater50um, greater100um):
+        if threading.current_thread() != self.thread:
+            self.func_queue.put((self.add_data_pm_count, (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)))
+            return
+
+        self.dbc.execute("""
+            INSERT INTO pm_count (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+        )
+
+        self.dbc.execute("""
+            UPDATE pm_count_minute
+            SET greater03um          = greater03um + ?,
+                greater05um = greater05um + ?,
+                greater10um        = greater10um + ?,
+                greater25um        = greater25um + ?,
+                greater50um        = greater50um + ?,
+                greater100um        = greater100um + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 60))""",
+            (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO pm_count_minute (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+        )
+
+        self.dbc.execute("""
+            UPDATE pm_count_hour
+            SET greater03um          = greater03um + ?,
+                greater05um = greater05um + ?,
+                greater10um        = greater10um + ?,
+                greater25um        = greater25um + ?,
+                greater50um        = greater50um + ?,
+                greater100um        = greater100um + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 3600))""",
+            (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO pm_count_hour (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+        )
+
+        self.dbc.execute("""
+            UPDATE pm_count_day
+            SET greater03um          = greater03um + ?,
+                greater05um = greater05um + ?,
+                greater10um        = greater10um + ?,
+                greater25um        = greater25um + ?,
+                greater50um        = greater50um + ?,
+                greater100um        = greater100um + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 86400))""",
+            (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO pm_count_day (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
+        )
+
+        self.db.commit()
+
+
+
     def add_data_station(self, identifier, temperature, humidity, wind_speed, gust_speed, rain, wind_direction, battery_low):
         if threading.current_thread() != self.thread:
             self.func_queue.put((self.add_data_station, (identifier, temperature, humidity, wind_speed, gust_speed, rain, wind_direction, battery_low)))
@@ -551,6 +624,64 @@ class ValueDB:
                 count integer default 1
             )"""
         )
+
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS pm_count (
+                id integer primary key,
+                time timestamp default (strftime('%s', 'now')),
+                greater03um integer, 
+                greater05um integer,
+                greater10um integer,
+                greater25um integer,
+                greater50um integer,
+                greater100um integer
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS pm_count_minute (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%60)),
+                greater03um integer, 
+                greater05um integer,
+                greater10um integer,
+                greater25um integer,
+                greater50um integer,
+                greater100um integer,
+                count integer default 1
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS pm_count_hour (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%3600)),
+                greater03um integer, 
+                greater05um integer,
+                greater10um integer,
+                greater25um integer,
+                greater50um integer,
+                greater100um integer,
+                count integer default 1
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS pm_count_day (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%86400)),
+                greater03um integer, 
+                greater05um integer,
+                greater10um integer,
+                greater25um integer,
+                greater50um integer,
+                greater100um integer,
+                count integer default 1
+            )"""
+        )
+
+
 
         self.dbc.execute("""
             CREATE TABLE IF NOT EXISTS station (
