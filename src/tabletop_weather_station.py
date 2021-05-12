@@ -19,6 +19,19 @@ import queue
 import threading
 import socket
 
+
+
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from requests import get
+import datetime
+
+
+scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name('./files/iper-247520.json', scope)
+client = gspread.authorize(creds)
+
+
 class WeatherStation:
     HOST = "localhost"
     PORT = 4223
@@ -62,6 +75,7 @@ class WeatherStation:
         # same time as a gesture or GUI callback. Otherwise we might draw two
         # different GUI elements at the same time.
         self.update_lock = threading.Lock()
+        
 
         self.ipcon = IPConnection() # Create IP connection
 
@@ -138,6 +152,11 @@ class WeatherStation:
         if now - self.last_air_quality_time >= TIME_SECONDS[self.logging_period_index]:
             self.vdb.add_data_air_quality(iaq_index, iaq_index_accuracy, temperature, humidity, air_pressure)
             self.last_air_quality_time = now
+            
+            sheet = client.open('TinkerForge_DataCollector').worksheet('AirQuality')
+            timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            sheet.append_row([timestamp, iaq_index, iaq_index_accuracy, temperature, humidity, air_pressure])
+
 
 
     def cb_pm_concentration(self, pm10, pm25, pm100):
@@ -181,7 +200,7 @@ class WeatherStation:
 
     def cb_co2_values(self, co2_concentration, temperature, humidity):
         self.co2_last_value = GAV_CO2(co2_concentration, temperature, humidity)
-        
+
         now = time.time()
         if now - self.last_co2_time >= TIME_SECONDS[self.logging_period_index]:
             self.vdb.add_data_co2(co2_concentration, temperature, humidity)
