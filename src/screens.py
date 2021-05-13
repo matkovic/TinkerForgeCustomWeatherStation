@@ -23,6 +23,8 @@ Boston, MA 02111-1307, USA.
 """
 
 import icons
+import logging as log
+
 
 TIME_SHORTCUTS = ['1s', '2s', '5s', '10s', '30s', '1m', '2m', '5m', '10m', '30m', '1h', '2h', '4h', '8h', '12h', '1d', '10d', '1M']
 TIME_STRINGS   = ['1 second', '2 seconds', '5 seconds', '10 seconds', '30 seconds', '1 minute', '2 minutes', '5 minutes', '10 minutes', '30 minutes', '1 hour', '2 hours', '4 hours', '8 hours', '12 hours', '1 day', '10 days', '1 month']
@@ -138,7 +140,23 @@ class GraphScreen(Screen):
     divisors_sensor      = [10, 1]
     fields_sensor        = ['temperature', 'humidity']
 
-    tables               = ['air_quality', 'station', 'sensor']
+    tables               = ['air_quality', 'station', 'sensor', 'co2', 'pm_concentration', 'pm_count']
+
+    caption_co2  = ['\xF8C', '%RH', 'ppm']
+    formats_co2  = ['{0:.1f}', '{0:.1f}', '{0:.1f}']
+    divisors_co2 = [100, 100, 1]
+    fields_co2   = ['temperature', 'humidity', 'co2_concentration']
+
+    caption_pm_concentration  = ['pm10', 'pm25', 'pm100']
+    formats_pm_concentration  = ['{0:.1f}', '{0:.1f}', '{0:.1f}']
+    divisors_pm_concentration = [1, 1, 1]
+    fields_pm_concentration   = ['pm10', 'pm25', 'pm100']
+
+
+    caption_pm_count  = ['>03um', '>05um', '>10um', '>25um', '>50um', '>100um']
+    formats_pm_count  = ['{0:.1f}', '{0:.1f}', '{0:.1f}', '{0:.1f}', '{0:.1f}', '{0:.1f}']
+    divisors_pm_count = [1, 1, 1, 1, 1, 1]
+    fields_pm_count   = ['greater03um', 'greater05um', 'greater10um', 'greater25um', 'greater50um', 'greater100um']
 
     def __init__(self, stations = [], sensors = []):
         self.num      = 0
@@ -151,6 +169,18 @@ class GraphScreen(Screen):
         if num < 4:
             return self.caption_air_quality[num], self.formats_air_quality[num], self.divisors_air_quality[num], self.fields_air_quality[num], self.tables[0], None, None
         num -= 4
+
+        if num < 3:
+            return self.caption_co2[num], self.formats_co2[num], self.divisors_co2[num], self.fields_co2[num], self.tables[3], None, None
+        num -= 3
+
+        if num < 3:
+            return self.caption_pm_concentration[num], self.formats_pm_concentration[num], self.divisors_pm_concentration[num], self.fields_pm_concentration[num], self.tables[4], None, None
+        num -= 3
+
+        if num < 6:
+            return self.caption_pm_count[num], self.formats_pm_count[num], self.divisors_pm_count[num], self.fields_pm_count[num], self.tables[5], None, None
+        num -= 6
 
         for i, station in enumerate(self.stations):
             if num < 4:
@@ -167,7 +197,7 @@ class GraphScreen(Screen):
         return None # This should never be reachable
 
     def get_num_graphs(self):
-        return len(self.caption_air_quality) + len(self.stations)*len(self.caption_station) + len(self.sensors)*len(self.caption_sensor)
+        return len(self.caption_air_quality) + len(self.stations)*len(self.caption_station) + len(self.sensors)*len(self.caption_sensor) + len(self.caption_co2) + len(self.caption_pm_concentration) + len(self.caption_pm_count)
 
     def draw_init(self):
         def draw_updown(offset):

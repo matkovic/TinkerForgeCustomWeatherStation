@@ -45,7 +45,7 @@ class CO2Screen(Screen):
         humidity = last_value.humidity
 
         self.lcd.write_line(1, 0, "CO2 Conc.: " + str(co2_concentration) + " ppm")
-        self.lcd.write_line(2, 0, "Temperature: " + str(temperature/100.0) + " °C")
+        self.lcd.write_line(2, 0, "Temperature: " + str(temperature/100.0) + " \xF8C")
         self.lcd.write_line(3, 0, "Humidity: " + str(humidity/100.0) + " %RH")
   
 class PMScreen(Screen):
