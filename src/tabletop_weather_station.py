@@ -21,15 +21,16 @@ import socket
 
 
 
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-from requests import get
-import datetime
+# import gspread
+# from oauth2client.service_account import ServiceAccountCredentials
+# from requests import get
+# import datetime
+
+# scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+# creds = ServiceAccountCredentials.from_json_keyfile_name('./files/iper-247520.json', scope)
+# client = gspread.authorize(creds)
 
 
-scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('./files/iper-247520.json', scope)
-client = gspread.authorize(creds)
 
 
 class WeatherStation:
@@ -153,9 +154,9 @@ class WeatherStation:
             self.vdb.add_data_air_quality(iaq_index, iaq_index_accuracy, temperature, humidity, air_pressure)
             self.last_air_quality_time = now
             
-            sheet = client.open('TinkerForge_DataCollector').worksheet('AirQuality')
-            timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-            sheet.append_row([timestamp, iaq_index, iaq_index_accuracy, temperature, humidity, air_pressure])
+            # sheet = client.open('TinkerForge_DataCollector').worksheet('AirQuality')
+            # timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            # sheet.append_row([timestamp, iaq_index, iaq_index_accuracy, temperature, humidity, air_pressure])
 
 
 
@@ -163,7 +164,7 @@ class WeatherStation:
         self.pm_last_value = (pm10, pm25, pm100)
 
         now = time.time()
-        if now - self.last_pm_concentration_time >= TIME_SECONDS[self.logging_period_index]:
+        if now - self.last_pm_concentration_time >= TIME_SECONDS[self.logging_period_index] and self.pm.get_enable():
             self.vdb.add_data_pm_concentration(pm10,pm25,pm100)
             self.last_pm_concentration_time = now
         
@@ -183,7 +184,7 @@ class WeatherStation:
         self.pm_count_last_value = (greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
 
         now = time.time()
-        if now - self.last_pm_count_time >= TIME_SECONDS[self.logging_period_index]:
+        if now - self.last_pm_count_time >= TIME_SECONDS[self.logging_period_index] and self.pm.get_enable():
             self.vdb.add_data_pm_count(greater03um, greater05um, greater10um, greater25um, greater50um, greater100um)
             self.last_pm_count_time = now
 

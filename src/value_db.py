@@ -413,6 +413,55 @@ class ValueDB:
             (co2_concentration, temperature, humidity)
         )
 
+
+        self.dbc.execute("""
+            UPDATE co2_minute
+            SET co2_concentration          = co2_concentration + ?,
+                temperature = temperature + ?,
+                humidity        = humidity + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 60))""",
+            (co2_concentration, temperature, humidity)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO co2_minute (co2_concentration, temperature, humidity)
+            VALUES (?, ?, ?)""",
+            (co2_concentration, temperature, humidity)
+        )
+
+        self.dbc.execute("""
+            UPDATE co2_hour
+            SET co2_concentration          = co2_concentration + ?,
+                temperature = temperature + ?,
+                humidity        = humidity + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 3600))""",
+            (co2_concentration, temperature, humidity)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO co2_hour (co2_concentration, temperature, humidity)
+            VALUES (?, ?, ?)""",
+            (co2_concentration, temperature, humidity)
+        )
+
+        self.dbc.execute("""
+            UPDATE co2_day
+            SET co2_concentration          = co2_concentration + ?,
+                temperature = temperature + ?,
+                humidity        = humidity + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 86400))""",
+            (co2_concentration, temperature, humidity)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO co2_day (co2_concentration, temperature, humidity)
+            VALUES (?, ?, ?)""",
+            (co2_concentration, temperature, humidity)
+        )
+
         self.db.commit()
 
     def add_data_station(self, identifier, temperature, humidity, wind_speed, gust_speed, rain, wind_direction, battery_low):
@@ -701,6 +750,39 @@ class ValueDB:
                 co2_concentration integer,
                 temperature integer,
                 humidity integer
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS co2_minute (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%60)),
+                co2_concentration integer,
+                temperature integer,
+                humidity integer,
+                count integer default 1
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS co2_hour (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%3600)),
+                co2_concentration integer,
+                temperature integer,
+                humidity integer,
+                count integer default 1
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS co2_day (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%86400)),
+                co2_concentration integer,
+                temperature integer,
+                humidity integer,
+                count integer default 1
             )"""
         )
 
