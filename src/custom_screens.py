@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
-from screens import Screen
+from screens import CustomGraphScreen, Screen
 
 # Simple example for a custom screen.
 # In this example we show the time in HH:MM:SS format.
@@ -110,6 +110,30 @@ class PMCountScreen(Screen):
         self.lcd.write_line(5, 0, 'PM count > 50um: ' + str(greater50um))
         self.lcd.write_line(6, 0, 'PM count > 100um: ' + str(greater100um))
 
+
+
+
+
+co2_graphScreen = CustomGraphScreen('co2','co2',
+                 ['\xF8C', '%RH', 'ppm'],
+                 ['{0:.1f}', '{0:.1f}', '{0:.1f}'],
+                 [100, 100, 1],
+                 ['temperature', 'humidity', 'co2_concentration'])
+
+pm_conc_graphScreen = CustomGraphScreen('PMconc','pm_concentration',
+                 ['pm10', 'pm25', 'pm100'],
+                 ['{0:.1f}', '{0:.1f}', '{0:.1f}'],
+                 [1, 1, 1],
+                 ['pm10', 'pm25', 'pm100'])
+                 
+pm_count_graphScreen = CustomGraphScreen('PMcnt','pm_count',
+                 ['>03um', '>05um', '>10um', '>25um', '>50um', '>100um'],
+                 ['{0:.1f}', '{0:.1f}', '{0:.1f}', '{0:.1f}', '{0:.1f}', '{0:.1f}'],
+                 [1, 1, 1, 1, 1, 1],
+                 ['greater03um', 'greater05um', 'greater10um', 'greater25um', 'greater50um', 'greater100um'])
+                 
+
+
 ################################################
 # Add your custom screens and tab position here:
 
@@ -121,7 +145,7 @@ class PMCountScreen(Screen):
 # Comment in below to try it out. It will show a "Clock"-Tab on second
 # position that prints the time in HH:MM:SS format.
 #
-CUSTOM_SCREENS          = [ClockScreen(), CO2Screen(), PMScreen(), PMCountScreen()] 
-CUSTOM_SCREENS_POSITION = 1  
+CUSTOM_SCREENS          = [ClockScreen(), co2_graphScreen, pm_conc_graphScreen, pm_count_graphScreen] 
+CUSTOM_SCREENS_POSITION = 0 
 #
 #################################################

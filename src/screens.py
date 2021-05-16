@@ -261,6 +261,123 @@ class GraphScreen(Screen):
                 self.draw_init()
 
 
+
+class CustomGraphScreen(Screen):
+    text = "Graph"
+    # icon = icons.IconTabGraph
+    toggleGraphOrNumbers = True
+
+    def __init__(self, tabName, table, captions, formats, divisors, fields):
+        self.num = 0
+        self.text = tabName
+        self.table = table
+        self.captions = captions
+        self.formats = formats
+        self.divisors = divisors
+        self.fields = fields
+
+    def get_value_properties(self):
+        num = self.num
+
+        return self.captions[num], self.formats[num], self.divisors[num], self.fields[num], self.table, None, None
+
+    def get_num_graphs(self):
+        return len(self.captions)
+
+    def draw_init(self):
+        if self.toggleGraphOrNumbers:
+            def draw_updown(offset):
+                self.lcd.draw_line(10+offset, 16, 15+offset, 11, self.num != num_graphs-1)
+                self.lcd.draw_line(15+offset, 11, 20+offset, 16, self.num != num_graphs-1)
+                self.lcd.draw_line(10+offset, 16 + 19, 15+offset, 11 + 19 + 10, self.num != 0)
+                self.lcd.draw_line(15+offset, 11 + 19 + 10, 20+offset, 16 + 19, self.num != 0)
+
+            num_graphs = self.get_num_graphs()
+            caption, _, _, _, _, _, num_icon = self.get_value_properties()
+
+            self.lcd.set_gui_graph_configuration(0, self.lcd.GRAPH_TYPE_LINE, 40, 0, 87, 52, TIME_SHORTCUTS[self.tws.graph_resolution_index], caption)
+
+            if num_icon != None:
+                # air quality graph
+                self.draw_icon(0, 11, icons.IconLeftSwipeUpDownSmall)
+                self.lcd.draw_text(32, 18, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, str(num_icon[0]))
+                self.lcd.draw_line(32, 26, 37, 28, self.lcd.COLOR_BLACK)
+                self.lcd.draw_text(32, 29, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, str(num_icon[1]))
+                self.draw_icon(24, 13, num_icon[2])
+                draw_updown(0)
+            else:
+                # station / sensor graph
+                self.draw_icon(0, 11, icons.IconLeftSwipeUpDown)
+                draw_updown(7)
+
+        self.draw_update()
+
+    def draw_update(self):
+
+        if self.toggleGraphOrNumbers:
+            _, fmt, divisor, field, table, identifier, _ = self.get_value_properties()
+
+            # Rain data needs special handling since we need to calculate mm/period while the database has
+            # sum of mm over all measurements
+            if table == 'station' and field == 'rain':
+                data = self.vdb.get_data_rain_period_list(87, TIME_SECONDS[self.tws.graph_resolution_index], identifier)
+            else:
+                data = self.vdb.get_data(87, TIME_SECONDS[self.tws.graph_resolution_index], field, table, identifier)
+
+
+            scaled_data, value_min, value_max = self.scale_data_for_graph(data)
+
+            value_min = fmt.format(float(value_min)/divisor)
+            value_max = fmt.format(float(value_max)/divisor)
+            value_min = ' '*(6 - len(value_min)) + value_min
+            value_max = ' '*(6 - len(value_max)) + value_max
+            self.lcd.draw_text(2, 0,  self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, value_max)
+            self.lcd.draw_text(2, 45, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, value_min)
+            self.lcd.set_gui_graph_data(0, scaled_data)
+        else:
+            row = 1
+            for ind in range(len(self.captions)):
+                caption = self.captions[ind]
+                field = self.fields[ind]
+                divisor = self.divisors[ind]
+                format = self.formats[ind]
+                data = self.vdb.get_data(1, TIME_SECONDS[self.tws.graph_resolution_index], field, self.table, None)
+
+                self.lcd.write_line(row, 3, field[:5] + ": " + str(data[0]/divisor) + caption )
+                row += 1
+                
+
+
+    def touch_gesture(self, gesture, duration, pressure_max, x_start, x_end, y_start, y_end, age):
+        num_graphs = self.get_num_graphs()
+        
+
+
+        if gesture == self.lcd.GESTURE_BOTTOM_TO_TOP:
+            if self.num < num_graphs-1:
+                self.num += 1
+                    
+                self.lcd.clear_display()
+                self.draw_init()
+        elif gesture == self.lcd.GESTURE_TOP_TO_BOTTOM:
+            if self.num > 0:
+                self.num -= 1
+                self.lcd.clear_display()
+                self.draw_init()
+        elif gesture == self.lcd.GESTURE_LEFT_TO_RIGHT:
+            self.lcd.clear_display()
+            self.lcd.remove_gui_graph(255)
+            self.toggleGraphOrNumbers=False
+            self.draw_init()
+        elif gesture == self.lcd.GESTURE_RIGHT_TO_LEFT:
+            self.lcd.clear_display()
+            self.lcd.remove_gui_graph(255)
+            self.toggleGraphOrNumbers=True
+            self.draw_init()                
+            
+
+
+
 class SensorScreen(Screen):
     text = 'Senso'
     icon = icons.IconTabSensor
