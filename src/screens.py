@@ -343,7 +343,7 @@ class CustomGraphScreen(Screen):
                 format = self.formats[ind]
                 data = self.vdb.get_data(1, TIME_SECONDS[self.tws.graph_resolution_index], field, self.table, None)
 
-                self.lcd.write_line(row, 3, field[:5] + ": " + str(data[0]/divisor) + caption )
+                self.lcd.write_line(row, 3, field[:5] + ": " + str(format.format(data[0]/divisor)) + caption )
                 row += 1
                 
 

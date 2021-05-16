@@ -26,6 +26,7 @@ import sqlite3
 import os
 import threading
 import time
+import datetime
 import logging as log
 import sys
 
@@ -36,6 +37,8 @@ except:
 
 class ValueDB:
     air_quality_first_data = None
+    gs_timer = 0
+    gs_inter = 0
 
     def stop(self):
         self.run = False
@@ -73,6 +76,38 @@ class ValueDB:
 
         while self.run:
             func_data = self.func_queue.get()
+
+
+            if self.gs_timer==0:
+                self.gs_timer = time.time()
+            elif self.gs_save_to_google_spreadsheet is not None and int(time.time() - self.gs_timer) >= self.gs_save_to_google_spreadsheet:
+                self.gs_timer = time.time()
+                if self.gs_inter == 0:  # push data to speadsheet periodically for different sensors
+                    self.dbc.execute('SELECT * FROM air_quality_day ORDER BY id')
+                    gs_values = self.dbc.fetchall()
+                    sheet = self.gs_client.open('TinkerForge_DataCollector').worksheet('AirQuality')
+                    sheet.update('A1',gs_values)
+                elif self.gs_inter == 1:
+                    self.dbc.execute('SELECT * FROM pm_concentration_day ORDER BY id')
+                    gs_values = self.dbc.fetchall()
+                    sheet = self.gs_client.open('TinkerForge_DataCollector').worksheet('PM_Concentration')
+                    sheet.update('A1',gs_values)
+                elif self.gs_inter == 2:
+                    self.dbc.execute('SELECT * FROM pm_count_day ORDER BY id')
+                    gs_values = self.dbc.fetchall()
+                    sheet = self.gs_client.open('TinkerForge_DataCollector').worksheet('PM_Count')
+                    sheet.update('A1',gs_values)
+                elif self.gs_inter == 3:
+                    self.dbc.execute('SELECT * FROM co2_day ORDER BY id')
+                    gs_values = self.dbc.fetchall()
+                    sheet = self.gs_client.open('TinkerForge_DataCollector').worksheet('CO2')
+                    sheet.update('A1',gs_values)
+
+                self.gs_inter += 1
+                self.gs_inter = self.gs_inter%4
+
+
+            
 
             if func_data == None:
                 break
@@ -907,9 +942,16 @@ class ValueDB:
 
         self.db.commit()
 
-    def __init__(self, gui, packaged):
+    def __init__(self, gui, packaged, save_to_google_spreadsheet=None):
         self.gui = gui
         self.packaged = packaged
+        self.gs_save_to_google_spreadsheet = save_to_google_spreadsheet
+        if save_to_google_spreadsheet is not None:
+            import gspread
+            from oauth2client.service_account import ServiceAccountCredentials
+            self.gs_scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+            self.gs_creds = ServiceAccountCredentials.from_json_keyfile_name('./files/iper-247520.json', self.gs_scope)
+            self.gs_client = gspread.authorize(self.gs_creds)
         self.run = True
         self.func_queue = queue.Queue()
         self.func_queue_ret = queue.Queue()

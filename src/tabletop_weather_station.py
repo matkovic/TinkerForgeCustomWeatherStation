@@ -56,6 +56,7 @@ class WeatherStation:
     graph_resolution_index = None
     logging_period_index = None
 
+
     def __init__(self, vdb):
         self.vdb = vdb
 
@@ -70,7 +71,7 @@ class WeatherStation:
 
         self.pm_last_time_enable = 0
         self.pm_enable_seconds = 30
-        self.pm_enable_pause_seconds = 30
+        self.pm_enable_pause_seconds = 300
 
         # We use this lock to make sure that there is never an update at the
         # same time as a gesture or GUI callback. Otherwise we might draw two
@@ -253,7 +254,7 @@ class WeatherStation:
                     self.pm.set_pm_concentration_callback_configuration(2000, False)
                     self.pm.register_callback(self.pm.CALLBACK_PM_CONCENTRATION, self.cb_pm_concentration)
                     
-                    self.pm.set_pm_count_callback_configuration(5000, False)
+                    self.pm.set_pm_count_callback_configuration(2000, False)
                     self.pm.register_callback(self.pm.CALLBACK_PM_COUNT, self.cb_pm_count)
                     log.info('PM initialized')
                 except Error as e:
@@ -262,7 +263,7 @@ class WeatherStation:
             elif device_identifier == BrickletCO2V2.DEVICE_IDENTIFIER:
                 try:
                     self.co2 = BrickletCO2V2(uid, self.ipcon)
-                    self.co2.set_all_values_callback_configuration(1000, False)
+                    self.co2.set_all_values_callback_configuration(2000, False)
                     self.co2.register_callback(self.co2.CALLBACK_ALL_VALUES, self.cb_co2_values)
                     log.info('CO2 initialized')
                 except Error as e:
@@ -287,7 +288,9 @@ class WeatherStation:
 def loop(run_ref, stop_queue):
     gui = False
     packaged = False
-    vdb = ValueDB(gui, packaged)
+
+    save_to_google_spreadsheet = 60*60*8
+    vdb = ValueDB(gui, packaged, save_to_google_spreadsheet=save_to_google_spreadsheet)
     tws = WeatherStation(vdb)
     Screen.tws = tws
     Screen.vdb = vdb
