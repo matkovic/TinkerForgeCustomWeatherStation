@@ -11,6 +11,7 @@ It includes viewing values of these sensors on [LCD display](https://www.tinkerf
 
 Additional "bonus", I added, is writting data to google spreadsheet, for additional graphs or just sending and saving data to gdrive for no specific reason. This should not be used to send big chunks of data. (see [value_db.py](./src/value_db.py) and take care of you gserviceaccount beforehand)
 
+Before running, you need to install Brick Daemon according to instructions [here](https://www.tinkerforge.com/en/doc/Embedded/Raspberry_Pi.html).
 
 Start with
 ```
