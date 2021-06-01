@@ -289,7 +289,7 @@ def loop(run_ref, stop_queue):
     gui = False
     packaged = False
 
-    save_to_google_spreadsheet = 60*60*8
+    save_to_google_spreadsheet = None #60*60*8
     vdb = ValueDB(gui, packaged, save_to_google_spreadsheet=save_to_google_spreadsheet)
     tws = WeatherStation(vdb)
     Screen.tws = tws
@@ -334,11 +334,11 @@ if __name__ == "__main__":
     thread.daemon = True
     thread.start()
 
-    if sys.version_info < (3, 0):
-        input = raw_input # Compatibility for Python 2.x
-    input('Press key to exit\n')
+    while True:
+        True
+    #if sys.version_info < (3, 0):
+    #    input = raw_input # Compatibility for Python 2.x
+    #input('Press key to exit\n')
 
 
-
-
-    log.info('Weather Station: End')
+    #log.info('Weather Station: End')
