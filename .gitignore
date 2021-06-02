@@ -5,3 +5,4 @@ src/tinkerforge/.weather_station.db
 files/
 __pycache__/
 *.pyc
+*.cpython-37.pyc
