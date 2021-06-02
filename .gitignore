@@ -3,3 +3,5 @@ venv/
 src/tinkerforge/.tabletop_weather_station_demo.db
 src/tinkerforge/.weather_station.db
 files/
+__pycache__/
+*.pyc
