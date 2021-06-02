@@ -218,6 +218,8 @@ class WeatherStation:
                 try:
                     # Initialize newly enumerated LCD128x64 Bricklet
                     self.lcd = BrickletLCD128x64(uid, self.ipcon)
+                    self.lcd.set_display_configuration(14, 50, False, True)
+                    self.lcd.set_status_led_config(0) # turn off status light
                     self.lcd.clear_display()
                     #self.lcd.write_line(0, 0, "   Weather Station")
 
@@ -240,6 +242,7 @@ class WeatherStation:
                 try:
                     # Initialize newly enumaratedy Air Quality Bricklet and configure callbacks
                     self.air_quality = BrickletAirQuality(uid, self.ipcon)
+                    self.air_quality.set_status_led_config(0) # turn off status light
                     self.cb_air_quality_all_values(*self.air_quality.get_all_values())
 
                     self.air_quality.set_all_values_callback_configuration(2000, False)
@@ -251,6 +254,7 @@ class WeatherStation:
             elif device_identifier == BrickletParticulateMatter.DEVICE_IDENTIFIER:
                 try:
                     self.pm = BrickletParticulateMatter(uid, self.ipcon)
+                    self.pm.set_status_led_config(0) # turn off status light
                     self.pm.set_pm_concentration_callback_configuration(2000, False)
                     self.pm.register_callback(self.pm.CALLBACK_PM_CONCENTRATION, self.cb_pm_concentration)
                     
@@ -263,6 +267,7 @@ class WeatherStation:
             elif device_identifier == BrickletCO2V2.DEVICE_IDENTIFIER:
                 try:
                     self.co2 = BrickletCO2V2(uid, self.ipcon)
+                    self.co2.set_status_led_config(0) # turn off status light
                     self.co2.set_all_values_callback_configuration(2000, False)
                     self.co2.register_callback(self.co2.CALLBACK_ALL_VALUES, self.cb_co2_values)
                     log.info('CO2 initialized')
