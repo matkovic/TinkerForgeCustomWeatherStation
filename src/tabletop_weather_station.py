@@ -8,12 +8,14 @@ log.basicConfig(level=log.INFO)
 
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.ip_connection import Error
+from tinkerforge.brick_master import BrickMaster
 from tinkerforge.bricklet_lcd_128x64 import BrickletLCD128x64
 from tinkerforge.bricklet_air_quality import BrickletAirQuality, GetAllValues
 from tinkerforge.bricklet_particulate_matter import BrickletParticulateMatter
 from tinkerforge.bricklet_co2_v2 import BrickletCO2V2, GetAllValues as GAV_CO2
 from screens import screen_set_lcd, screen_tab_selected, screen_touch_gesture, screen_update, screen_slider_value, Screen, TIME_SECONDS
 from value_db import ValueDB
+from datetime import datetime
 
 import queue
 import threading
@@ -29,8 +31,6 @@ import socket
 # scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
 # creds = ServiceAccountCredentials.from_json_keyfile_name('./files/iper-247520.json', scope)
 # client = gspread.authorize(creds)
-
-
 
 
 class WeatherStation:
@@ -274,6 +274,17 @@ class WeatherStation:
                 except Error as e:
                     log.error('CO2 initialization failed: ' + str(e.description))
                     self.co2 = None
+            elif device_identifier == BrickMaster.DEVICE_IDENTIFIER:
+                try:
+                    self.master = BrickMaster(uid, self.ipcon)
+                    self.master.disable_status_led()
+                    log.info('Master initialized')
+                except Error as e:
+                    log.error('Master initialization failed: ' + str(e.description))
+                    self.master = None
+
+
+
 
     def cb_connected(self, connected_reason):
         # Eumerate again after auto-reconnect
@@ -300,6 +311,12 @@ def loop(run_ref, stop_queue):
     Screen.tws = tws
     Screen.vdb = vdb
 
+    now = datetime.now()
+    if now.hour < 8:
+        backlight = True
+    else:
+        backlight = False
+
     while run_ref[0]:
         tws.update_lock.acquire()
 
@@ -315,6 +332,16 @@ def loop(run_ref, stop_queue):
             break
         except queue.Empty:
             pass
+
+        # turn off screen backlight at dark
+        now = datetime.now()
+
+        if now.hour < 8 and backlight:
+            tws.lcd.set_display_configuration(14, 0, False, True)
+            backlight = False
+        elif now.hour >= 8 and not backlight:
+            tws.lcd.set_display_configuration(14, 30, False, True)
+            backlight = True
     
     vdb.stop()
 
@@ -341,6 +368,7 @@ if __name__ == "__main__":
 
     while True:
         True
+
     #if sys.version_info < (3, 0):
     #    input = raw_input # Compatibility for Python 2.x
     #input('Press key to exit\n')
